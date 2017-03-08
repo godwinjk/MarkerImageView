@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "E:\\Project\\Wisilica_Sample_Projects\\MyApplication\\markerimageview\\build\\intermediates\\res\\merged\\release\\color-v11\\abc_background_cache_hint_selector_material_light.xml",
+        "source": "E:\\Project\\Wisilica_Sample_Projects\\MyApplication\\markerimageview\\build\\intermediates\\exploded-aar\\com.android.support\\appcompat-v7\\25.1.0\\res\\color-v11\\abc_background_cache_hint_selector_material_light.xml"
+    },
+    {
+        "merged": "E:\\Project\\Wisilica_Sample_Projects\\MyApplication\\markerimageview\\build\\intermediates\\res\\merged\\release\\color-v11\\abc_background_cache_hint_selector_material_dark.xml",
+        "source": "E:\\Project\\Wisilica_Sample_Projects\\MyApplication\\markerimageview\\build\\intermediates\\exploded-aar\\com.android.support\\appcompat-v7\\25.1.0\\res\\color-v11\\abc_background_cache_hint_selector_material_dark.xml"
+    }
+]
