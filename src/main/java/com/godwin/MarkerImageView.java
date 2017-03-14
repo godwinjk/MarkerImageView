@@ -4,13 +4,15 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
-import android.widget.ImageView;
 
 import com.squareup.picasso.Picasso;
 
@@ -23,9 +25,10 @@ import java.util.ListIterator;
  * @Author : Godwin Joseph Kurinjikattu
  */
 
-public final class MarkerImageView extends ImageView {
+public final class MarkerImageView extends android.support.v7.widget.AppCompatImageView {
     private ArrayList<MarkerCoordinate> coordinates = new ArrayList<>();
     private Bitmap markerBitmap;
+    private MarkerListener markerListener;
 
     public MarkerImageView(Context context) {
         super(context);
@@ -41,7 +44,7 @@ public final class MarkerImageView extends ImageView {
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public MarkerImageView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-        super(context, attrs, defStyleAttr, defStyleRes);
+        super(context, attrs, defStyleAttr);
     }
 
     public void load(Uri imageUri) {
@@ -61,7 +64,7 @@ public final class MarkerImageView extends ImageView {
     }
 
     public void setMarkerResource(@DrawableRes int resId) {
-        markerBitmap = BitmapFactory.decodeResource(getResources(),resId);
+        markerBitmap = BitmapFactory.decodeResource(getResources(), resId);
         if (markerBitmap == null)
             throw new ResourceNotFoundException("Resource Id should referred to a valid ");
     }
@@ -89,18 +92,78 @@ public final class MarkerImageView extends ImageView {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            coordinates.add(new MarkerCoordinate(event.getX(), event.getY()));
+            getTouchedBitmapPixelPosition(event);
+//            coordinates.add(new MarkerCoordinate(event.getX(), event.getY()));
             invalidate();
         }
         return false;
     }
 
+    private void getTouchedBitmapPixelPosition(MotionEvent event) {
+        float eventX = event.getX();
+        float eventY = event.getY();
+        float[] eventXY = new float[]{eventX, eventY};
+
+        Matrix invertMatrix = new Matrix();
+        getImageMatrix().invert(invertMatrix);
+
+        invertMatrix.mapPoints(eventXY);
+        float x = eventXY[0];
+        float y = eventXY[1];
+
+        Bitmap bitmap = getBitmap();
+
+        //Limit x, y range within bitmap
+        if (x < 0) {
+            x = 0;
+        } else if (x > bitmap.getWidth() - 1) {
+            x = bitmap.getWidth() - 1;
+        }
+
+        if (y < 0) {
+            y = 0;
+        } else if (y > bitmap.getHeight() - 1) {
+            y = bitmap.getHeight() - 1;
+        }
+        MarkerCoordinate coordinate = new MarkerCoordinate(x, y);
+        coordinates.add(coordinate);
+        if (markerListener != null) {
+            markerListener.onMarkerCreated(coordinate);
+        }
+    }
+
+    private Bitmap getBitmap() {
+        Drawable imgDrawable = getDrawable();
+        return ((BitmapDrawable) imgDrawable).getBitmap();
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        Bitmap bitmap = getBitmap();
         Bitmap marker = markerBitmap == null ? BitmapFactory.decodeResource(getResources(), R.drawable.marker) : markerBitmap;
         for (MarkerCoordinate coordinate : coordinates) {
-            canvas.drawBitmap(marker, coordinate.x, coordinate.y, null);
+            float[] eventXY = new float[]{coordinate.x, coordinate.y};
+
+            Matrix invertMatrix = getImageMatrix();
+//            getImageMatrix().invert(invertMatrix);
+
+            invertMatrix.mapPoints(eventXY);
+
+            canvas.drawBitmap(marker, eventXY[0], eventXY[1], null);
         }
+    }
+
+    public void setMarkerListener(MarkerListener markerListener) {
+        this.markerListener = markerListener;
+    }
+
+    public ArrayList<MarkerCoordinate> getMarkerCoordinates() {
+        return coordinates;
+    }
+
+    public void setMarkerCoordinates(ArrayList<MarkerCoordinate> coordinates) {
+        this.coordinates = coordinates;
+        invalidate();
     }
 }
